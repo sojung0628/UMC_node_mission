@@ -1,26 +1,61 @@
-import { pool } from "../configs/db.config.js";
+import { prisma } from "../configs/db.config.js";
+import { BadRequestError } from "../utils/errors.js";
 
 export const addStore = async (data) => {
-    const conn = await pool.getConnection();
+  try {
+    const store = await prisma.store.create({
+      data: {
+        name: data.name,
+        time: data.time,
+        address: data.address,
+        region: data.region,
+        owner: {
+          connect: { id: data.owner },
+        },
+      },
+      select: { id: true },
+    });
 
-    try {
-        const [result] = await conn.query(
-            `INSERT INTO STORE (name, time, address, owner, region) VALUES (?, ?, ?, ?, ?);`,
-            [
-                data.name,
-                data.time,
-                data.address,
-                data.owner,
-                data.region
-            ]
-        );
-
-        return result.insertId;
-    } catch (err) {
-        throw new Error(
-            `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-        );
-    } finally {
-        conn.release();
+    return store.id;
+  } catch (err) {
+    if (err instanceof BadRequestError) {
+      throw err;
     }
-}
+
+    throw new BadRequestError("가게 생성에 실패했습니다. 입력값을 확인해주세요.", {
+      details: err.message,
+    });
+  }
+};
+
+export const getAllStoreReviews = async (storeId, cursor) => {
+    const where = {
+        storeId,
+        ...(cursor > 0 ? { id: { gt: cursor } } : {}),
+    };
+
+    const reviews = await prisma.userStoreReview.findMany({
+        select: {
+            id: true,
+            content: true,
+            score: true,
+            store: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+        where,
+        orderBy: { id: "asc" },
+        take: 5,
+    });
+
+    return reviews;
+};
