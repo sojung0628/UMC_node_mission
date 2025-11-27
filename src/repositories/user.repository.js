@@ -1,8 +1,7 @@
 import { prisma } from "../configs/db.config.js";
 import { ConflictError, NotFoundError } from "../utils/errors.js";
 
-
-// User 데이터 삽입
+// User 회원가입
 export const addUser = async (data) => {
   const user = await prisma.user.findUnique({ where: { email: data.email } });
   if (user) {
@@ -13,7 +12,25 @@ export const addUser = async (data) => {
   return created.id;
 };
 
-// 사용자 정보 얻기
+// email로 user 조회
+export const getUserByEmail = async (email) => {
+  return prisma.user.findUnique({ where: { email } });
+};
+
+// 사용자 정보 업데이트
+export const updateUser = async (userId, data) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new NotFoundError("사용자를 찾을 수 없습니다.");
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+};
+
+// 사용자 정보 조회
 export const getUser = async (userId) => {
   try {
     const user = await prisma.user.findFirstOrThrow({ where: { id: userId } });
@@ -30,6 +47,12 @@ export const setPreference = async (userId, foodCategoryId) => {
       userId: userId,
       foodCategoryId: foodCategoryId,
     },
+  });
+};
+
+export const deleteUserPreferences = async (userId) => {
+  await prisma.userFavorCategory.deleteMany({
+    where: { userId },
   });
 };
 

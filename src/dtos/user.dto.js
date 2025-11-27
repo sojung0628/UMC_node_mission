@@ -49,8 +49,8 @@ export const responseFromUser = ({ user, preferences }) => {
     .filter(Boolean);
 
   return {
-    access_token: `access-token-for-user-${user.id}`,
-    refresh_token: `refresh-token-for-user-${user.id}`,
+    access_token: user.access_token,
+    refresh_token: user.refresh_token,
     profile: {
       email: user.email,
       name: user.name,

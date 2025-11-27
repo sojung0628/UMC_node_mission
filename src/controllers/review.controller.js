@@ -1,7 +1,6 @@
 import { listUserReviews, reviewAppend } from "../services/review.service.js";
 import { getUser } from "../repositories/user.repository.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { extractUserIdFromAuth } from "../utils/auth.js";
 import { sendSuccess } from "../utils/response.js";
 import { BadRequestError } from "../utils/errors.js";
 
@@ -19,8 +18,7 @@ const parseCursor = (cursorRaw) => {
 };
 
 export const handlerReviewAppend = asyncHandler(async (req, res) => {
-    const userId = extractUserIdFromAuth(req);
-    const user = await getUser(userId);
+    const user = await getUser(req.user.id);
     const reviewId = await reviewAppend(req.body, user);
 
     sendSuccess(res, {
@@ -30,9 +28,8 @@ export const handlerReviewAppend = asyncHandler(async (req, res) => {
 });
 
 export const handlerListMyReviews = asyncHandler(async (req, res) => {
-    const userId = extractUserIdFromAuth(req);
     const cursor = parseCursor(req.query.cursor);
-    const { reviews, pagination } = await listUserReviews(userId, cursor);
+    const { reviews, pagination } = await listUserReviews(req.user.id, cursor);
 
     sendSuccess(res, {
         message: "내 리뷰 목록 조회에 성공했습니다.",

@@ -3,7 +3,6 @@ import { getUser } from "../repositories/user.repository.js";
 import { listStoreReviews, storeAppend } from "../services/store.service.js";
 import { listStoreMissions, missionAppend } from "../services/mission.service.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { extractUserIdFromAuth } from "../utils/auth.js";
 import { sendSuccess } from "../utils/response.js";
 import { BadRequestError } from "../utils/errors.js";
 
@@ -30,8 +29,7 @@ const parseStoreId = (storeIdRaw) => {
 };
 
 export const handlerStoreAppend = asyncHandler(async (req, res) => {
-    const userId = extractUserIdFromAuth(req);
-    const user = await getUser(userId);
+    const user = await getUser(req.user.id);
     const storeId = await storeAppend(bodyToStore(req.body), user);
 
     sendSuccess(res, {
@@ -41,8 +39,7 @@ export const handlerStoreAppend = asyncHandler(async (req, res) => {
 });
 
 export const handlerMissionAppend = asyncHandler(async (req, res) => {
-    const userId = extractUserIdFromAuth(req);
-    const user = await getUser(userId);
+    const user = await getUser(req.user.id);
     const missionId = await missionAppend(req.body, user);
 
     sendSuccess(res, {
